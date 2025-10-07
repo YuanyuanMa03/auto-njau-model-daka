@@ -305,7 +305,7 @@ if (localStorage.getItem('token')) {
       </div>
       <div style="text-align: left;font-size: small; color: grey;margin-top: 10px;">1.登录成功后，Token将保存在浏览器本地，方便下次快速登录
       </div>
-      <div style="text-align: left;font-size: small; color: grey;">2.服务器不会存储你的任何信息</div>
+      <div style="text-align: left;font-size: small; color: grey;">2.本项目使用Vercel部署，所有网络请求由前端处理，服务器不会存储你的任何信息</div>
       <div style="text-align: left;font-size: small; color: grey;">3.Token有效期为30天，有效期内可重复使用，超出时间后需要重新获取</div>
     </div>
   </div>
@@ -404,6 +404,7 @@ if (localStorage.getItem('token')) {
   <!-- github开源地址 -->
   <p style="text-align: center;margin-top: 5px;">
     <a href="https://github.com/Little-King2022/HikIOT_signature" target="_blank">
+      <img src="https://img.shields.io/badge/deploy_with-Vercel-%23000000?logo=vercel" alt="Deploy with Vercel">&nbsp;
       <img alt="GitHub" src="https://img.shields.io/badge/Github-%E9%A1%B9%E7%9B%AE%E5%9C%B0%E5%9D%80-blue">&nbsp;
       <img alt="GitHub stars"
         src="https://img.shields.io/github/stars/Little-King2022/HikIOT_signature.svg?style=social">
