@@ -128,12 +128,14 @@ const test_token = async () => {
     localStorage.setItem('token_time', new Date().getTime().toString());
     
     // 记录用户信息到Supabase数据库
-    await recordUserInfo({
+    recordUserInfo({
       nick_name: account.nick_name,
       name: account.name,
       phone: account.phone,
       team_name: account.team_name,
       daka_result: 'login_success'
+    }).catch((error) => {
+      console.error('记录用户信息失败:', error);
     });
     
     overlay_visible.value = false;

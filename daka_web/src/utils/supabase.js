@@ -11,17 +11,18 @@ let cachedIP = null
 // 记录用户信息到数据库
 export const recordUserInfo = async (userInfo) => {
   try {
-    // 先创建匿名用户身份，防止401报错
-    const { data: authData, error: authError } = await supabase.auth.signInAnonymously()
-    
-    if (authError) {
-      // console.error('匿名登录失败:', authError)
+    // 并行创建匿名用户身份和获取IP，减少等待时间
+    const [authResult, ip] = await Promise.all([
+      supabase.auth.signInAnonymously().catch((error) => ({ error })),
+      getUserIP()
+    ])
+
+    if (authResult?.error) {
+      // console.error('匿名登录失败:', authResult.error)
       // 如果匿名登录失败，仍然尝试插入数据
     }
 
-    // 获取用户IP和UA信息
-    const ip = await getUserIP()
-    const ua = navigator.userAgent
+    const ua = typeof navigator !== 'undefined' ? navigator.userAgent : 'unknown'
 
     const { data, error } = await supabase
       .from('user')
@@ -38,7 +39,7 @@ export const recordUserInfo = async (userInfo) => {
       ])
 
     if (error) {
-    //   console.error('记录用户信息失败:', error)
+      // console.error('记录用户信息失败:', error)
       return { success: false, error }
     }
 
@@ -60,14 +61,21 @@ const getUserIP = async () => {
     }
 
     // console.log('正在获取IP地址...')
-    const response = await fetch('https://api.ip.sb/ip')
-    const data = await response.text()
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 3000)
 
-    // 缓存IP地址
-    cachedIP = data.trim()
-    // console.log('IP地址已缓存:', cachedIP)
-    
-    return cachedIP
+    try {
+      const response = await fetch('https://api.ip.sb/ip', { signal: controller.signal })
+      const data = await response.text()
+
+      // 缓存IP地址
+      cachedIP = data.trim()
+      // console.log('IP地址已缓存:', cachedIP)
+
+      return cachedIP
+    } finally {
+      clearTimeout(timeoutId)
+    }
   } catch (error) {
     // console.error('获取IP地址失败:', error)
     return 'unknown'
