@@ -441,6 +441,7 @@ if (localStorage.getItem('token')) {
   <!-- github开源地址 -->
   <p style="text-align: center;margin-top: 5px;">
     <a href="https://github.com/Little-King2022/HikIOT_signature" target="_blank">
+      <img src="https://img.shields.io/badge/deploy_with-Vercel-%23000000?logo=vercel" alt="Deploy with Vercel">&nbsp;
       <img alt="GitHub" src="https://img.shields.io/badge/Github-%E9%A1%B9%E7%9B%AE%E5%9C%B0%E5%9D%80-blue">&nbsp;
       <img alt="GitHub stars"
         src="https://img.shields.io/github/stars/Little-King2022/HikIOT_signature.svg?style=social">

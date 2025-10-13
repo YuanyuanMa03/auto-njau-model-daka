@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/daka",
+      "destination": "https://daka2.littleking.site/api/daka"
+    }
+  ]
+}
