@@ -34,6 +34,7 @@ const account_info = ref({ is_rest_rule: false });
 const today_status = ref({});
 const daka_config = ref(DEFAULT_DAKA_CONFIG);
 const errorMessage = ref('');
+const isCheckingIn = ref(false);
 
 const isCollapsed1 = ref(true);
 const isCollapsed2 = ref(true);
@@ -195,6 +196,11 @@ const getSign = (payload) => {
 };
 
 const daka = async () => {
+  if (isCheckingIn.value) {
+    return;
+  }
+
+  isCheckingIn.value = true;
   try {
     const headers = getHeaders(token.value);
     const { newLatitude, newLongitude } = addRandomOffset(DEFAULT_DAKA_CONFIG.latitude, DEFAULT_DAKA_CONFIG.longitude);
@@ -261,10 +267,16 @@ const daka = async () => {
     });
 
     Toast(t('messages.networkError'));
+  } finally {
+    isCheckingIn.value = false;
   }
 };
 
 const handleDakaClick = async () => {
+  if (isCheckingIn.value) {
+    return;
+  }
+
   if (account_info.value?.is_rest_rule) {
     const res = await Dialog.confirm({
       title: t('messages.restDayTitle'),
@@ -273,10 +285,10 @@ const handleDakaClick = async () => {
       cancelBtn: { content: t('buttons.cancel') },
     });
     if (res?.confirm) {
-      daka();
+      await daka();
     }
   } else {
-    daka();
+    await daka();
   }
 };
 
@@ -431,7 +443,7 @@ if (localStorage.getItem('token')) {
 
       <br>
       <div style="text-align: center;">
-        <t-button theme="primary" @click="handleDakaClick"
+        <t-button theme="primary" @click="handleDakaClick" :disabled="isCheckingIn" :loading="isCheckingIn"
           style="font-size: 20px;letter-spacing: 3px;text-align: center;width: 70%;height: 60px;margin: 0 20px;box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);">
           {{ t('buttons.primaryCheckIn') }}
         </t-button>
