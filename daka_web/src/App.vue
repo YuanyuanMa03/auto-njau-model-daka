@@ -14,8 +14,8 @@ const FIXED_SIGN_SALT = 'WE1mfER7artAoJEwXKaCjw==';
 const REST_KEYWORD = '休息';
 const DEFAULT_DAKA_CONFIG = {
   message: 'success',
-  location: '南京农业大学(滨江校区)农学院',
-  address: '江苏省南京市浦口区江浦街道',
+  location: '江苏省南京市浦口区江浦街道南京农业大学滨江校区农学院南京农业大学(滨江校区)',
+  address: '江苏省南京市浦口区江浦街道南京农业大学滨江校区农学院南京农业大学(滨江校区)',
   longitude: 118.636838,
   latitude: 32.011898,
   wifi: 'NJAU',
