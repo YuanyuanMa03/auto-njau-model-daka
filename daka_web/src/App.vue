@@ -3,7 +3,7 @@ import { ref, h, computed, onBeforeUnmount } from 'vue';
 import { Toast, Dialog } from 'tdesign-mobile-vue';
 import axios from 'axios';
 import md5 from './utils/md5';
-import { IconFont, CloseIcon, CheckIcon } from 'tdesign-icons-vue-next';
+import { IconFont, CloseIcon, CheckIcon, EditIcon } from 'tdesign-icons-vue-next';
 import { recordUserInfo } from './utils/supabase';
 import { useI18n } from 'vue-i18n';
 
@@ -12,6 +12,7 @@ const { t } = useI18n();
 const API_BASE = 'https://api.hikiot.com';
 const FIXED_SIGN_SALT = 'WE1mfER7artAoJEwXKaCjw==';
 const REST_KEYWORD = '休息';
+const CUSTOM_CONFIG_KEY = 'daka_config_custom';
 const DEFAULT_DAKA_CONFIG = {
   message: 'success',
   location: '江苏省南京市浦口区江浦街道南京农业大学滨江校区农学院南京农业大学(滨江校区)',
@@ -21,6 +22,7 @@ const DEFAULT_DAKA_CONFIG = {
   wifi: 'NJAU',
   device_name: '微信小程序',
   wifi_mac: '58:ae:a8:32:59:90',
+  randomOffset: 50,
 };
 
 const icons = [h(CheckIcon, { size: '20px' }), h(CloseIcon, { size: '20px' })];
@@ -32,11 +34,15 @@ const has_verified = ref(false);
 const has_tested = ref(false);
 const account_info = ref({ is_rest_rule: false });
 const today_status = ref({});
-const daka_config = ref(DEFAULT_DAKA_CONFIG);
+const daka_config = ref(null);
 const errorMessage = ref('');
 const isCheckingIn = ref(false);
 const cooldownRemaining = ref(0);
 let cooldownTimer = null;
+
+const showEditDialog = ref(false);
+const editForm = ref({});
+const editErrors = ref({});
 
 const clearCooldown = () => {
   if (cooldownTimer) {
@@ -237,16 +243,16 @@ const daka = async () => {
   isCheckingIn.value = true;
   try {
     const headers = getHeaders(token.value);
-    const { newLatitude, newLongitude } = addRandomOffset(DEFAULT_DAKA_CONFIG.latitude, DEFAULT_DAKA_CONFIG.longitude);
+    const { newLatitude, newLongitude } = addRandomOffset(daka_config.value.latitude, daka_config.value.longitude, daka_config.value.randomOffset ?? DEFAULT_DAKA_CONFIG.randomOffset);
     const payload = {
       deviceSerial: '',
       longitude: newLongitude,
       latitude: newLatitude,
-      clockSite: '江苏省南京市浦口区江浦街道南京农业大学(滨江校区)',
-      address: DEFAULT_DAKA_CONFIG.address,
-      deviceName: DEFAULT_DAKA_CONFIG.device_name,
-      wifiName: DEFAULT_DAKA_CONFIG.wifi,
-      wifiMac: DEFAULT_DAKA_CONFIG.wifi_mac,
+      clockSite: daka_config.value.location,
+      address: daka_config.value.address,
+      deviceName: daka_config.value.device_name,
+      wifiName: daka_config.value.wifi,
+      wifiMac: daka_config.value.wifi_mac,
     };
 
     const signedHeaders = {
@@ -335,7 +341,91 @@ const refresh_today_status = async () => {
 };
 
 const get_daka_config = () => {
-  daka_config.value = DEFAULT_DAKA_CONFIG;
+  const saved = localStorage.getItem(CUSTOM_CONFIG_KEY);
+  if (saved) {
+    try {
+      const custom = JSON.parse(saved);
+      daka_config.value = { ...DEFAULT_DAKA_CONFIG, ...custom };
+    } catch (e) {
+      daka_config.value = { ...DEFAULT_DAKA_CONFIG };
+    }
+  } else {
+    daka_config.value = { ...DEFAULT_DAKA_CONFIG };
+  }
+};
+
+const openEditDialog = () => {
+  editForm.value = {
+    address: daka_config.value.address,
+    location: daka_config.value.location,
+    longitude: String(daka_config.value.longitude),
+    latitude: String(daka_config.value.latitude),
+    wifi: daka_config.value.wifi,
+    wifi_mac: daka_config.value.wifi_mac,
+    randomOffset: String(daka_config.value.randomOffset ?? DEFAULT_DAKA_CONFIG.randomOffset),
+  };
+  editErrors.value = {};
+  showEditDialog.value = true;
+};
+
+const validateEditForm = () => {
+  const errors = {};
+  const lng = Number(editForm.value.longitude);
+  if (isNaN(lng) || lng < -180 || lng > 180) {
+    errors.longitude = t('cards.location.longitudeError');
+  }
+  const lat = Number(editForm.value.latitude);
+  if (isNaN(lat) || lat < -90 || lat > 90) {
+    errors.latitude = t('cards.location.latitudeError');
+  }
+  const macPattern = /^([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}$/;
+  if (!macPattern.test(editForm.value.wifi_mac)) {
+    errors.wifi_mac = t('cards.location.wifiMacError');
+  }
+  const offset = Number(editForm.value.randomOffset);
+  if (String(editForm.value.randomOffset).trim() === '' || !Number.isInteger(offset) || offset < 0) {
+    errors.randomOffset = t('cards.location.randomOffsetError');
+  }
+  editErrors.value = errors;
+  return Object.keys(errors).length === 0;
+};
+
+const saveEditConfig = () => {
+  if (!validateEditForm()) return;
+  daka_config.value = {
+    ...daka_config.value,
+    address: editForm.value.address,
+    location: editForm.value.location,
+    longitude: Number(editForm.value.longitude),
+    latitude: Number(editForm.value.latitude),
+    wifi: editForm.value.wifi,
+    wifi_mac: editForm.value.wifi_mac,
+    randomOffset: Number(editForm.value.randomOffset),
+  };
+  const customFields = {
+    address: daka_config.value.address,
+    location: daka_config.value.location,
+    longitude: daka_config.value.longitude,
+    latitude: daka_config.value.latitude,
+    wifi: daka_config.value.wifi,
+    wifi_mac: daka_config.value.wifi_mac,
+    randomOffset: daka_config.value.randomOffset,
+  };
+  localStorage.setItem(CUSTOM_CONFIG_KEY, JSON.stringify(customFields));
+  showEditDialog.value = false;
+};
+
+const resetConfigToDefault = () => {
+  editForm.value = {
+    address: DEFAULT_DAKA_CONFIG.address,
+    location: DEFAULT_DAKA_CONFIG.location,
+    longitude: String(DEFAULT_DAKA_CONFIG.longitude),
+    latitude: String(DEFAULT_DAKA_CONFIG.latitude),
+    wifi: DEFAULT_DAKA_CONFIG.wifi,
+    wifi_mac: DEFAULT_DAKA_CONFIG.wifi_mac,
+    randomOffset: String(DEFAULT_DAKA_CONFIG.randomOffset),
+  };
+  editErrors.value = {};
 };
 
 const toggleCard = (index) => {
@@ -355,6 +445,8 @@ const save_auto_login = () => {
 if (localStorage.getItem('auto_login')) {
   auto_login.value = localStorage.getItem('auto_login') === 'true';
 }
+
+get_daka_config();
 
 if (localStorage.getItem('token')) {
   token.value = localStorage.getItem('token');
@@ -413,7 +505,7 @@ if (localStorage.getItem('token')) {
           :style="{ color: isCollapsed1 ? '#c1c1c1' : '#333' }">{{ t('cards.userInfo.title') }}</p>
         <icon-font class="toggle-icon" :name="isCollapsed1 ? 'expand-down' : 'expand-up'"></icon-font>
       </div>
-      <div class="card-content" style="margin: 0 auto 5px;" v-show="!isCollapsed1">
+      <div class="card-content card-details" v-show="!isCollapsed1">
         <p>{{ t('cards.userInfo.nickname') }}：{{ account_info.nick_name }}</p>
         <p>{{ t('cards.userInfo.phone') }}：{{ account_info.phone }}</p>
         <p>{{ t('cards.userInfo.team') }}：{{ account_info.team_name }} - {{ account_info.name }}</p>
@@ -422,19 +514,71 @@ if (localStorage.getItem('token')) {
     </div>
     <br>
     <div v-if="daka_config" class="card">
+      <button type="button" class="icon-button edit-icon-button" @click.stop="openEditDialog">
+        <edit-icon class="edit-icon" size="18px" />
+      </button>
       <div @click="toggleCard(2)">
         <p style="font-size: larger; font-weight: bold; text-align: center;"
           :style="{ color: isCollapsed2 ? '#c1c1c1' : '#333' }">{{ t('cards.location.title') }}</p>
         <icon-font class="toggle-icon" :name="isCollapsed2 ? 'expand-down' : 'expand-up'"></icon-font>
       </div>
-      <div class="card-content" style="margin-left: 20px;" v-show="!isCollapsed2">
+      <div class="card-content card-details" v-show="!isCollapsed2">
         <p>{{ t('cards.location.address') }}：{{ daka_config.address }}</p>
         <p>{{ t('cards.location.clockAddress') }}：{{ daka_config.location }}</p>
         <p>{{ t('cards.location.longitude') }}：{{ daka_config.longitude }} </p>
         <p>{{ t('cards.location.latitude') }}：{{ daka_config.latitude }} </p>
         <p>{{ t('cards.location.wifiName') }}：{{ daka_config.wifi }} </p>
         <p>{{ t('cards.location.wifiMac') }}：{{ daka_config.wifi_mac }} </p>
-        <p>{{ t('cards.location.randomOffset') }}</p>
+        <p>{{ t('cards.location.randomOffsetLabel') }}：{{ daka_config.randomOffset ?? DEFAULT_DAKA_CONFIG.randomOffset }} {{ t('cards.location.metersUnit') }}</p>
+      </div>
+    </div>
+
+    <div v-if="showEditDialog" class="edit-dialog-backdrop" @click.self="showEditDialog = false">
+      <div class="edit-dialog-panel">
+        <div class="edit-dialog-header">
+          <span class="edit-dialog-title">{{ t('cards.location.editDialogTitle') }}</span>
+          <button type="button" class="icon-button edit-dialog-close-button" @click="showEditDialog = false">
+            <close-icon class="edit-dialog-close" size="22px" />
+          </button>
+        </div>
+        <div class="edit-dialog-body">
+          <div class="edit-field">
+            <label>{{ t('cards.location.address') }}</label>
+            <t-input v-model="editForm.address" class="edit-input" />
+          </div>
+          <div class="edit-field">
+            <label>{{ t('cards.location.clockAddress') }}</label>
+            <t-input v-model="editForm.location" class="edit-input" />
+          </div>
+          <div class="edit-field">
+            <label>{{ t('cards.location.longitude') }}</label>
+            <t-input v-model="editForm.longitude" class="edit-input" :tips="editErrors.longitude" />
+          </div>
+          <div class="edit-field">
+            <label>{{ t('cards.location.latitude') }}</label>
+            <t-input v-model="editForm.latitude" class="edit-input" :tips="editErrors.latitude" />
+          </div>
+          <div class="edit-field">
+            <label>{{ t('cards.location.wifiName') }}</label>
+            <t-input v-model="editForm.wifi" class="edit-input" />
+          </div>
+          <div class="edit-field">
+            <label>{{ t('cards.location.wifiMac') }}</label>
+            <t-input v-model="editForm.wifi_mac" class="edit-input" :tips="editErrors.wifi_mac" />
+          </div>
+          <div class="edit-field">
+            <label>{{ t('cards.location.randomOffsetLabel') }}（{{ t('cards.location.metersUnit') }}）</label>
+            <t-input v-model="editForm.randomOffset" class="edit-input" :tips="editErrors.randomOffset" />
+          </div>
+        </div>
+        <div class="edit-dialog-footer">
+          <t-button variant="outline" theme="default" @click="resetConfigToDefault" style="flex: 1;">
+            {{ t('cards.location.resetDefault') }}
+          </t-button>
+          <t-button theme="primary" @click="saveEditConfig" style="flex: 1;">
+            {{ t('cards.location.save') }}
+          </t-button>
+        </div>
       </div>
     </div>
 
@@ -537,6 +681,11 @@ if (localStorage.getItem('token')) {
   transition: max-height 0.3s ease-in-out;
 }
 
+.card-details {
+  margin: 0 0 5px;
+  text-align: left;
+}
+
 .toggle-icon {
   position: absolute;
   top: 12px;
@@ -548,6 +697,149 @@ if (localStorage.getItem('token')) {
 
 .card.collapsed .toggle-icon {
   transform: rotate(180deg);
+}
+
+.icon-button {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.edit-icon {
+  font-size: 18px;
+  color: #666;
+}
+
+.edit-icon-button {
+  position: absolute;
+  top: 12px;
+  right: 36px;
+  z-index: 1;
+}
+
+.edit-dialog-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.edit-dialog-panel {
+  background: white;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 480px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.edit-dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid #eee;
+}
+
+.edit-dialog-title {
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.edit-dialog-close {
+  color: #666;
+}
+
+.edit-dialog-close-button {
+  flex-shrink: 0;
+}
+
+.edit-dialog-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 20px;
+}
+
+.edit-field {
+  margin-bottom: 12px;
+}
+
+.edit-field label {
+  display: block;
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 4px;
+}
+
+.edit-input {
+  border: 1px solid rgba(220, 220, 220, 1);
+  border-radius: 6px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .edit-dialog-backdrop {
+    background: rgba(0, 0, 0, 0.7);
+  }
+
+  .edit-dialog-panel {
+    background: #1f2937;
+    color: #f3f4f6;
+    box-shadow: 0 18px 48px rgba(0, 0, 0, 0.45);
+  }
+
+  .edit-dialog-header {
+    border-bottom-color: rgba(255, 255, 255, 0.12);
+  }
+
+  .edit-dialog-title,
+  .edit-dialog-close,
+  .edit-field label {
+    color: #f3f4f6;
+  }
+
+  .edit-dialog-footer {
+    border-top-color: rgba(255, 255, 255, 0.12);
+  }
+
+  .edit-icon {
+    color: #d1d5db;
+  }
+
+  .edit-input {
+    border-color: rgba(255, 255, 255, 0.12);
+  }
+
+  .edit-input :deep(.t-input) {
+    background: #111827;
+    color: #f9fafb;
+    border-color: rgba(255, 255, 255, 0.12);
+  }
+
+  .edit-input :deep(.t-input__inner),
+  .edit-input :deep(.t-input__inner::placeholder),
+  .edit-input :deep(.t-input__suffix),
+  .edit-input :deep(.t-input__tips) {
+    color: #d1d5db;
+  }
+}
+
+.edit-dialog-footer {
+  display: flex;
+  padding: 12px 20px;
+  border-top: 1px solid #eee;
+  gap: 8px;
 }
 
 t-switch {
