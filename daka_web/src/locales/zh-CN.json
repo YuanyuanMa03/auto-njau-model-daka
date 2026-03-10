@@ -59,7 +59,15 @@
       "latitude": "纬度",
       "wifiName": "Wi-Fi名称",
       "wifiMac": "Wi-Fi Mac地址",
-      "randomOffset": "定位点随机偏移：50 米"
+      "randomOffsetLabel": "定位点随机偏移",
+      "metersUnit": "米",
+      "editDialogTitle": "编辑位置模拟配置",
+      "save": "保存",
+      "resetDefault": "恢复默认",
+      "longitudeError": "经度应为 -180 到 180 之间的数字",
+      "latitudeError": "纬度应为 -90 到 90 之间的数字",
+      "wifiMacError": "Mac地址格式应为 XX:XX:XX:XX:XX:XX（十六进制，冒号分隔）",
+      "randomOffsetError": "随机偏移应为非负整数（米）"
     },
     "today": {
       "title": "今日打卡信息",

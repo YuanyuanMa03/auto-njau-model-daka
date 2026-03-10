@@ -59,7 +59,15 @@
       "latitude": "Latitude",
       "wifiName": "Wi-Fi Name",
       "wifiMac": "Wi-Fi MAC Address",
-      "randomOffset": "Random location offset: 50 meters"
+      "randomOffsetLabel": "Random location offset",
+      "metersUnit": "meters",
+      "editDialogTitle": "Edit Location Config",
+      "save": "Save",
+      "resetDefault": "Restore Defaults",
+      "longitudeError": "Longitude must be a number between -180 and 180",
+      "latitudeError": "Latitude must be a number between -90 and 90",
+      "wifiMacError": "MAC address format must be XX:XX:XX:XX:XX:XX (hex pairs separated by colons)",
+      "randomOffsetError": "Random offset must be a non-negative integer (meters)"
     },
     "today": {
       "title": "Today's Check-in Information",
