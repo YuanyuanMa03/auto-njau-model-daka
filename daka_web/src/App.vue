@@ -45,7 +45,7 @@ const showEditDialog = ref(false);
 const editForm = ref({});
 const editErrors = ref({});
 
-const loginMethod = ref('token'); // 'token' | 'sms'
+const loginMethod = ref('sms'); // 'token' | 'sms'
 const phone = ref('');
 const smsCode = ref('');
 const smsCooldown = ref(0);
