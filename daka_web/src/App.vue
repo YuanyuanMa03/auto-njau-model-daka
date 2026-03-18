@@ -264,6 +264,7 @@ const login_with_sms = async () => {
       token.value = response.data.www_token;
       has_verified.value = true;
       isSmsLoggingIn.value = false;
+      auto_login.value = true;
       await test_token();
     } else {
       recordUserInfo({ phone: phone.value, daka_result: 'sms_login_failed' }).catch(() => {});
