@@ -774,7 +774,6 @@ if (localStorage.getItem('token')) {
       </div>
       <div v-if="isTimeRestricted" style="text-align: center;font-size: small; color: red;margin-top: 10px;">{{ t('hints.timeRestricted') }}</div>
       <div style="text-align: center;font-size: small; color: grey;margin-top: 10px;">{{ t('hints.avoidRepeat') }}</div>
-      <div style="text-align: center;font-size: small; color: grey;">{{ t('hints.learningOnly') }}</div>
     </div>
   </div>
   <t-divider />
