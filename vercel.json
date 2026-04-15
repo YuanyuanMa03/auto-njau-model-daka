@@ -1,10 +1,4 @@
 {
-  "rewrites": [
-    {
-      "source": "/api/daka",
-      "destination": "https://daka2.littleking.site/api/daka"
-    }
-  ],
   "env": {
     "VITE_ENABLE_SUPABASE_LOG": "false",
     "VITE_ENABLE_TIME_RESTRICTION": "false"
