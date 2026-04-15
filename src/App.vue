@@ -82,6 +82,9 @@ onBeforeUnmount(() => {
 });
 
 const isTimeRestricted = computed(() => {
+  if (import.meta.env.VITE_ENABLE_TIME_RESTRICTION !== 'true') {
+    return false;
+  }
   const now = new Date();
   const totalMinutes = now.getHours() * 60 + now.getMinutes();
   return totalMinutes >= 2 * 60 && totalMinutes < 8 * 60 + 30;
@@ -785,11 +788,9 @@ if (localStorage.getItem('token')) {
       @change="save_auto_login"></t-switch>
   </div>
   <p style="text-align: center;margin-top: 5px;">
-    <a href="https://github.com/Little-King2022/HikIOT_signature" target="_blank">
+    <a href="https://github.com/Little-King2022/daka" target="_blank">
       <img src="https://img.shields.io/badge/deploy_with-Vercel-%23000000?logo=vercel" alt="Deploy with Vercel">&nbsp;
-      <img alt="GitHub" src="https://img.shields.io/badge/Github-%E9%A1%B9%E7%9B%AE%E5%9C%B0%E5%9D%80-blue">&nbsp;
-      <img alt="GitHub stars"
-        src="https://img.shields.io/github/stars/Little-King2022/HikIOT_signature.svg?style=social">
+      <img alt="GitHub" src="https://img.shields.io/badge/Github-%E9%A1%B9%E7%9B%AE%E5%9C%B0%E5%9D%80-blue">
     </a>
   </p>
 </template>

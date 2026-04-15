@@ -1,0 +1,6 @@
+{
+  "env": {
+    "VITE_ENABLE_SUPABASE_LOG": "false",
+    "VITE_ENABLE_TIME_RESTRICTION": "false"
+  }
+}
