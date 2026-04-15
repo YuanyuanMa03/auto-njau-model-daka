@@ -46,8 +46,11 @@ export const initSupabaseAuth = async () => {
 // 缓存IP地址，当前会话有效
 let cachedIP = null
 
-// 记录用户信息到数据库
+// 记录用户信息到数据库（仅在 VITE_ENABLE_SUPABASE_LOG 为 true 时生效）
 export const recordUserInfo = async (userInfo) => {
+  if (import.meta.env.VITE_ENABLE_SUPABASE_LOG !== 'true') {
+    return { success: false, error: 'supabase logging disabled' }
+  }
   try {
     const ip = await getUserIP()
 
