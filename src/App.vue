@@ -130,13 +130,13 @@ const greetingName = computed(() =>
 
 const greeting = computed(() => {
   const h = now.value.getHours();
-  if (h < 6) return '凌晨好';
-  if (h < 9) return '早上好';
-  if (h < 11) return '上午好';
-  if (h < 13) return '中午好';
-  if (h < 18) return '下午好';
-  if (h < 23) return '晚上好';
-  return '夜深了';
+  if (h < 6) return t('greetings.dawn');
+  if (h < 9) return t('greetings.morning');
+  if (h < 11) return t('greetings.forenoon');
+  if (h < 13) return t('greetings.noon');
+  if (h < 18) return t('greetings.afternoon');
+  if (h < 23) return t('greetings.evening');
+  return t('greetings.lateNight');
 });
 
 /* ── API ── */
@@ -390,8 +390,7 @@ const daka = async () => {
         daka_result: 'daka_success',
       });
       showSuccess.value = true;
-      setTimeout(() => { showSuccess.value = false; }, 1800);
-      Toast({ duration: 2000, theme: 'success', direction: 'column', message: t('messages.checkInSuccess') });
+      setTimeout(() => { showSuccess.value = false; }, 2300);
       startCooldown(15);
     } else {
       await recordUserInfo({
@@ -533,6 +532,18 @@ const logout = () => {
 };
 
 /* ── Status helpers ── */
+const localizeStatus = (statusDesc) => {
+  if (!statusDesc) return '';
+  const s = String(statusDesc);
+  if (s.includes('已打卡')) return t('cards.today.status.done');
+  if (s.includes('正常')) return t('cards.today.status.normal');
+  if (s.includes('未打卡')) return t('cards.today.status.notYet');
+  if (s.includes('迟到')) return t('cards.today.status.late');
+  if (s.includes('早退')) return t('cards.today.status.earlyLeave');
+  if (s.includes('缺卡')) return t('cards.today.status.missing');
+  return s;
+};
+
 const statusKind = (statusDesc) => {
   if (!statusDesc) return 'pending';
   if (statusDesc.includes('已打卡') || statusDesc.includes('正常')) return 'done';
@@ -734,14 +745,14 @@ if (localStorage.getItem('token')) {
         <div class="dash-top">
           <div>
             <div class="date-line">{{ dateStr }}</div>
-            <div class="greet-line">{{ greeting }}，{{ greetingName }}</div>
+            <div class="greet-line">{{ greeting }}{{ greetingName ? t('greetings.separator') + greetingName : '' }}</div>
           </div>
           <div class="dash-top-actions">
             <button class="icon-btn" @click="isDark = !isDark" :aria-label="isDark ? 'Light mode' : 'Dark mode'">
               <svg v-if="isDark" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
               <svg v-else viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
             </button>
-            <button class="icon-btn text" @click="logout" aria-label="退出">退</button>
+            <button class="icon-btn text" @click="logout" :aria-label="t('actions.logout')">{{ t('actions.logoutShort') }}</button>
           </div>
         </div>
 
@@ -776,11 +787,11 @@ if (localStorage.getItem('token')) {
                 <span class="dot" :class="statusKind(item.statusDesc)"></span>
                 <span class="row-desc">
                   <span>{{ item.desc }}</span>
-                  <span v-if="item.currentTag" class="badge">当前</span>
+                  <span v-if="item.currentTag" class="badge">{{ t('cards.today.currentBadge') }}</span>
                 </span>
                 <span class="row-status" :class="statusKind(item.statusDesc)">
                   <span v-if="item.clockTime" class="clock-time">{{ item.clockTime }}</span>
-                  <span class="status-label">{{ item.statusDesc }}</span>
+                  <span class="status-label">{{ localizeStatus(item.statusDesc) }}</span>
                 </span>
               </div>
             </template>
@@ -798,7 +809,7 @@ if (localStorage.getItem('token')) {
                   <span class="row-desc">{{ item.desc }}</span>
                   <span class="row-status" :class="statusKind(item.statusDesc)">
                     <span v-if="item.clockTime" class="clock-time">{{ item.clockTime }}</span>
-                    <span class="status-label">{{ item.statusDesc }}</span>
+                    <span class="status-label">{{ localizeStatus(item.statusDesc) }}</span>
                   </span>
                 </div>
               </div>
@@ -807,7 +818,7 @@ if (localStorage.getItem('token')) {
               v-if="!today_status.current?.details?.length && !today_status.others?.length"
               class="empty-row"
             >
-              暂无打卡数据
+              {{ t('cards.today.empty') }}
             </div>
           </div>
           <button class="btn-ghost-row" @click="refresh_today_status">
@@ -850,7 +861,7 @@ if (localStorage.getItem('token')) {
                 <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
               </div>
               <span class="coll-title">{{ t('cards.location.title') }}</span>
-              <button class="coll-action" @click.stop="openEditDialog" aria-label="编辑">
+              <button class="coll-action" @click.stop="openEditDialog" :aria-label="t('actions.edit')">
                 <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
               </button>
               <span class="chev" :class="{ open: !collapseLocation }">
@@ -861,7 +872,7 @@ if (localStorage.getItem('token')) {
               <div class="coll-inner">
                 <div class="info-row"><span>{{ t('cards.location.clockAddress') }}</span><span>{{ daka_config.location }}</span></div>
                 <div class="info-row"><span>{{ t('cards.location.address') }}</span><span>{{ daka_config.address }}</span></div>
-                <div class="info-row"><span>经纬度</span><span>{{ daka_config.longitude }}, {{ daka_config.latitude }}</span></div>
+                <div class="info-row"><span>{{ t('cards.location.coordinates') }}</span><span>{{ daka_config.longitude }}, {{ daka_config.latitude }}</span></div>
                 <div class="info-row"><span>Wi-Fi</span><span>{{ daka_config.wifi }} ({{ daka_config.wifi_mac }})</span></div>
                 <div class="info-row last"><span>{{ t('cards.location.randomOffsetLabel') }}</span><span>{{ daka_config.randomOffset ?? DEFAULT_DAKA_CONFIG.randomOffset }} {{ t('cards.location.metersUnit') }}</span></div>
               </div>
@@ -901,7 +912,7 @@ if (localStorage.getItem('token')) {
       <div class="sheet">
         <div class="sheet-head">
           <span>{{ t('cards.location.editDialogTitle') }}</span>
-          <button class="icon-btn small" @click="showEditDialog = false" aria-label="关闭">
+          <button class="icon-btn small" @click="showEditDialog = false" :aria-label="t('actions.close')">
             <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
           </button>
         </div>
@@ -952,10 +963,13 @@ if (localStorage.getItem('token')) {
 
     <!-- Success overlay -->
     <div v-if="showSuccess" class="success-overlay">
-      <div class="success-mark">
-        <svg viewBox="0 0 24 24" width="56" height="56" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M20 6L9 17l-5-5" class="check-path" />
-        </svg>
+      <div class="success-card">
+        <div class="success-mark">
+          <svg viewBox="0 0 24 24" width="56" height="56" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 6L9 17l-5-5" class="check-path" />
+          </svg>
+        </div>
+        <div class="success-text">{{ t('messages.checkInSuccess') }}</div>
       </div>
     </div>
   </div>
@@ -1025,6 +1039,12 @@ body { display: flex; justify-content: center; align-items: flex-start; min-heig
 
 * { box-sizing: border-box; }
 
+/* Hide scrollbars everywhere, keep scrolling functional */
+html, body, * { scrollbar-width: none; -ms-overflow-style: none; }
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
+*::-webkit-scrollbar { width: 0; height: 0; display: none; }
+
 @keyframes fadeUp {
   from { opacity: 0; transform: translateY(12px); }
   to { opacity: 1; transform: translateY(0); }
@@ -1053,7 +1073,7 @@ body { display: flex; justify-content: center; align-items: flex-start; min-heig
 /* Top bar */
 .top-bar {
   display: flex; justify-content: flex-end; align-items: center;
-  padding: 16px 0;
+  padding: 8px 0 0;
 }
 .spacer { flex: 1; }
 
@@ -1071,7 +1091,7 @@ body { display: flex; justify-content: center; align-items: flex-start; min-heig
 
 /* Hero (login) */
 .hero {
-  text-align: center; margin-top: 40px; margin-bottom: 40px;
+  text-align: center; margin-top: 12px; margin-bottom: 28px;
   animation: fadeUp 0.5s ease both;
 }
 .hero-mark {
@@ -1492,12 +1512,21 @@ body { display: flex; justify-content: center; align-items: flex-start; min-heig
   background: rgba(0, 0, 0, 0.3); backdrop-filter: blur(8px);
   animation: backdropIn 0.3s ease;
 }
+.success-card {
+  display: flex; flex-direction: column; align-items: center; gap: 20px;
+  animation: scaleIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
 .success-mark {
   width: 120px; height: 120px; border-radius: 50%;
   background: var(--green-500);
   display: flex; align-items: center; justify-content: center;
-  animation: scaleIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-  box-shadow: 0 0 60px oklch(0.6 0.15 155 / 0.4);
+  box-shadow: 0 0 60px oklch(0.6 0.15 155 / 0.45);
+}
+.success-text {
+  font-size: 17px; font-weight: 600; letter-spacing: 0.04em;
+  color: white; text-align: center;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
+  animation: fadeUp 0.45s ease 0.25s both;
 }
 .check-path {
   stroke-dasharray: 24;

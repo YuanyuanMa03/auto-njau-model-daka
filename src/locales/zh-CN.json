@@ -57,6 +57,7 @@
       "clockAddress": "打卡地址",
       "longitude": "经度",
       "latitude": "纬度",
+      "coordinates": "经纬度",
       "wifiName": "Wi-Fi名称",
       "wifiMac": "Wi-Fi Mac地址",
       "randomOffsetLabel": "定位点随机偏移",
@@ -73,8 +74,35 @@
       "title": "今日打卡信息",
       "noCheckIn": "今日无需打卡",
       "currentTitle": "当前班次打卡",
-      "otherTitle": "其他班次打卡"
+      "otherTitle": "其他班次打卡",
+      "currentBadge": "当前",
+      "empty": "暂无打卡数据",
+      "status": {
+        "done": "已打卡",
+        "normal": "正常",
+        "notYet": "未打卡",
+        "late": "迟到",
+        "earlyLeave": "早退",
+        "missing": "缺卡"
+      }
     }
+  },
+  "greetings": {
+    "dawn": "凌晨好",
+    "morning": "早上好",
+    "forenoon": "上午好",
+    "noon": "中午好",
+    "afternoon": "下午好",
+    "evening": "晚上好",
+    "lateNight": "夜深了",
+    "hello": "你好",
+    "separator": "，"
+  },
+  "actions": {
+    "logout": "退出",
+    "logoutShort": "退",
+    "edit": "编辑",
+    "close": "关闭"
   },
   "hints": {
     "avoidRepeat": "请勿连续点击按钮，防止重复打卡",

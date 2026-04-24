@@ -57,6 +57,7 @@
       "clockAddress": "Check-in Address",
       "longitude": "Longitude",
       "latitude": "Latitude",
+      "coordinates": "Coordinates",
       "wifiName": "Wi-Fi Name",
       "wifiMac": "Wi-Fi MAC Address",
       "randomOffsetLabel": "Random location offset",
@@ -73,8 +74,35 @@
       "title": "Today's Check-in Information",
       "noCheckIn": "No check-in required today",
       "currentTitle": "Current Shift Check-in",
-      "otherTitle": "Other Shift Check-ins"
+      "otherTitle": "Other Shift Check-ins",
+      "currentBadge": "Current",
+      "empty": "No check-in data yet",
+      "status": {
+        "done": "Checked in",
+        "normal": "On time",
+        "notYet": "Not yet",
+        "late": "Late",
+        "earlyLeave": "Early leave",
+        "missing": "Missed"
+      }
     }
+  },
+  "greetings": {
+    "dawn": "Good early morning",
+    "morning": "Good morning",
+    "forenoon": "Good morning",
+    "noon": "Good noon",
+    "afternoon": "Good afternoon",
+    "evening": "Good evening",
+    "lateNight": "It's late",
+    "hello": "Hello",
+    "separator": ", "
+  },
+  "actions": {
+    "logout": "Log out",
+    "logoutShort": "Exit",
+    "edit": "Edit",
+    "close": "Close"
   },
   "hints": {
     "avoidRepeat": "Please do not click repeatedly to avoid duplicate check-ins.",
