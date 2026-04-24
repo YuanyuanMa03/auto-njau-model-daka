@@ -28,20 +28,25 @@ const DEFAULT_DAKA_CONFIG = {
 };
 
 /* ── Theme ── */
-const isDark = ref(false);
-const initTheme = () => {
-  const saved = localStorage.getItem(THEME_KEY);
-  if (saved) {
-    isDark.value = saved === 'dark';
-  } else {
-    isDark.value = window.matchMedia('(prefers-color-scheme: dark)').matches;
-  }
+const prefersDarkMq = window.matchMedia('(prefers-color-scheme: dark)');
+const savedTheme = localStorage.getItem(THEME_KEY);
+const isDark = ref(savedTheme ? savedTheme === 'dark' : prefersDarkMq.matches);
+const followSystem = ref(!savedTheme);
+
+const handleSystemThemeChange = (e) => {
+  if (followSystem.value) isDark.value = e.matches;
 };
-initTheme();
+prefersDarkMq.addEventListener('change', handleSystemThemeChange);
+
 watch(isDark, (v) => {
   document.documentElement.setAttribute('data-theme', v ? 'dark' : 'light');
-  localStorage.setItem(THEME_KEY, v ? 'dark' : 'light');
 }, { immediate: true });
+
+const toggleDark = () => {
+  isDark.value = !isDark.value;
+  followSystem.value = false;
+  localStorage.setItem(THEME_KEY, isDark.value ? 'dark' : 'light');
+};
 
 /* ── App state ── */
 const overlay_visible = ref(false);
@@ -110,6 +115,7 @@ onBeforeUnmount(() => {
   clearCooldown();
   if (smsCooldownTimer) clearInterval(smsCooldownTimer);
   if (clockTimer) clearInterval(clockTimer);
+  prefersDarkMq.removeEventListener('change', handleSystemThemeChange);
 });
 
 const isTimeRestricted = computed(() => {
@@ -588,7 +594,7 @@ if (localStorage.getItem('token')) {
       <div class="screen login-screen">
         <div class="top-bar">
           <span class="spacer"></span>
-          <button class="icon-btn" @click="isDark = !isDark" :aria-label="isDark ? 'Light mode' : 'Dark mode'">
+          <button class="icon-btn" @click="toggleDark" :aria-label="isDark ? 'Light mode' : 'Dark mode'">
             <svg v-if="isDark" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
             <svg v-else viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
           </button>
@@ -748,7 +754,7 @@ if (localStorage.getItem('token')) {
             <div class="greet-line">{{ greeting }}{{ greetingName ? t('greetings.separator') + greetingName : '' }}</div>
           </div>
           <div class="dash-top-actions">
-            <button class="icon-btn" @click="isDark = !isDark" :aria-label="isDark ? 'Light mode' : 'Dark mode'">
+            <button class="icon-btn" @click="toggleDark" :aria-label="isDark ? 'Light mode' : 'Dark mode'">
               <svg v-if="isDark" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
               <svg v-else viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
             </button>
