@@ -7,7 +7,7 @@ import { recordUserInfo } from './utils/supabase';
 import { useI18n } from 'vue-i18n';
 import instructionImg from './assets/instruction.png';
 
-const { t } = useI18n();
+const { t, locale } = useI18n();
 
 const API_BASE = 'https://api.hikiot.com';
 const SMS_API_BASE = 'https://hiklogin.littleking.site/api';
@@ -198,6 +198,51 @@ const addScheduleLog = (entry) => {
   localStorage.setItem(SCHEDULE_LOG_KEY, JSON.stringify(scheduleLog.value));
 };
 
+const getScheduleLogTypeLabel = (type) => {
+  const labels = {
+    triggered: t('schedule.logTypes.triggered'),
+    success: t('schedule.logTypes.success'),
+    retry: t('schedule.logTypes.retry'),
+    failed: t('schedule.logTypes.failed'),
+    skipped: t('schedule.logTypes.skipped'),
+  };
+  return labels[type] ?? type;
+};
+
+const getScheduleShiftLabel = (shift) => {
+  const labels = {
+    morning: t('schedule.logShifts.morning'),
+    evening: t('schedule.logShifts.evening'),
+    manual: t('schedule.logShifts.manual'),
+  };
+  return labels[shift] ?? shift;
+};
+
+const getScheduleLogMessage = (log) => {
+  if (log.messageKey) {
+    return t(`schedule.logMessages.${log.messageKey}`, log.messageParams ?? {});
+  }
+  return log.message ?? '';
+};
+
+const getScheduleLogSummary = (log) => {
+  const attemptText = log.attempt
+    ? t('schedule.logAttempt', { n: log.attempt })
+    : log.attempts
+      ? t('schedule.logAttempts', { n: log.attempts })
+      : '';
+  return [
+    getScheduleShiftLabel(log.shift),
+    attemptText,
+    getScheduleLogMessage(log),
+  ].filter(Boolean).join(' · ');
+};
+
+const formatScheduleLogTime = (time) => {
+  const timeLocale = locale.value === 'en' ? 'en-US' : 'zh-CN';
+  return new Date(time).toLocaleTimeString(timeLocale, { hour: '2-digit', minute: '2-digit' });
+};
+
 // Generate random time with variance (minutes)
 const generateRandomTime = (baseHour, baseMinute, varianceMinutes) => {
   const offsetMinutes = Math.floor(Math.random() * (2 * varianceMinutes + 1)) - varianceMinutes;
@@ -290,24 +335,27 @@ const isAlreadyCheckedIn = (shift) => {
 // ── Retry with exponential backoff ──
 const dakaWithRetry = async (maxAttempts = 3, baseDelay = 5000, shift = 'manual') => {
   let lastError = null;
+  let lastErrorKey = null;
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
       const result = await daka(true); // silent mode
       if (result) {
-        addScheduleLog({ type: 'success', shift, attempt, message: t('messages.checkInSuccess') });
+        addScheduleLog({ type: 'success', shift, attempt, messageKey: 'checkInSuccess' });
         return true;
       }
-      lastError = 'API returned failure';
+      lastError = '';
+      lastErrorKey = 'apiFailure';
     } catch (error) {
       lastError = error.message || String(error);
+      lastErrorKey = null;
     }
-    addScheduleLog({ type: 'retry', shift, attempt, message: lastError });
+    addScheduleLog({ type: 'retry', shift, attempt, message: lastError, messageKey: lastErrorKey });
     if (attempt < maxAttempts) {
       const delay = baseDelay * Math.pow(2, attempt - 1);
       await new Promise(r => setTimeout(r, delay));
     }
   }
-  addScheduleLog({ type: 'failed', shift, attempts: maxAttempts, message: lastError });
+  addScheduleLog({ type: 'failed', shift, attempts: maxAttempts, message: lastError, messageKey: lastErrorKey });
   return false;
 };
 
@@ -341,12 +389,17 @@ const checkScheduleAndRun = async () => {
       await get_today_status(true);
       if (isAlreadyCheckedIn(shift)) {
         markScheduleRun(shift, 'skipped', 'already checked in');
-        addScheduleLog({ type: 'skipped', shift, message: 'already checked in' });
+        addScheduleLog({ type: 'skipped', shift, messageKey: 'alreadyCheckedIn' });
         findNextSchedule();
         continue;
       }
 
-      addScheduleLog({ type: 'triggered', shift, message: `${t('schedule.autoTrigger')}: ${shift} ${formatScheduleTime(scheduledTime)}` });
+      addScheduleLog({
+        type: 'triggered',
+        shift,
+        messageKey: 'autoTrigger',
+        messageParams: { time: formatScheduleTime(scheduledTime) },
+      });
       const cfg = scheduleConfig.value;
       const success = await dakaWithRetry(cfg.retryMaxAttempts, cfg.retryBaseDelay, shift);
       markScheduleRun(shift, success ? 'success' : 'failed');
@@ -1315,9 +1368,9 @@ watch(has_tested, (val) => {
                 <div v-if="scheduleLog.length" class="schedule-log">
                   <div class="schedule-log-title">{{ t('schedule.recentLog') }}</div>
                   <div v-for="(log, idx) in scheduleLog.slice(0, 5)" :key="idx" class="schedule-log-row">
-                    <span class="log-type" :class="log.type">{{ log.type }}</span>
-                    <span class="log-msg">{{ log.shift }} #{{ log.attempt || log.attempts || '-' }} {{ log.message }}</span>
-                    <span class="log-time">{{ new Date(log.time).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }) }}</span>
+                    <span class="log-type" :class="log.type">{{ getScheduleLogTypeLabel(log.type) }}</span>
+                    <span class="log-msg">{{ getScheduleLogSummary(log) }}</span>
+                    <span class="log-time">{{ formatScheduleLogTime(log.time) }}</span>
                   </div>
                 </div>
               </div>

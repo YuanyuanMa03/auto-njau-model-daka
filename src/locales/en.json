@@ -141,6 +141,26 @@
     "tomorrow": "Scheduled for tomorrow",
     "enabledHint": "Auto check-in at scheduled time",
     "autoTrigger": "Auto triggered",
-    "recentLog": "Recent Logs"
+    "recentLog": "Recent Logs",
+    "logTypes": {
+      "triggered": "Triggered",
+      "success": "Success",
+      "retry": "Retry",
+      "failed": "Failed",
+      "skipped": "Skipped"
+    },
+    "logShifts": {
+      "morning": "Clock-in",
+      "evening": "Clock-out",
+      "manual": "Manual"
+    },
+    "logMessages": {
+      "autoTrigger": "Scheduled at {time}",
+      "checkInSuccess": "Check-in succeeded",
+      "apiFailure": "API returned failure",
+      "alreadyCheckedIn": "Existing check-in record found"
+    },
+    "logAttempt": "Attempt {n}",
+    "logAttempts": "{n} attempts"
   }
 }

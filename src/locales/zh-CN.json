@@ -141,6 +141,26 @@
     "tomorrow": "明日再执行",
     "enabledHint": "到时自动打卡",
     "autoTrigger": "定时触发",
-    "recentLog": "最近记录"
+    "recentLog": "最近记录",
+    "logTypes": {
+      "triggered": "触发",
+      "success": "成功",
+      "retry": "重试",
+      "failed": "失败",
+      "skipped": "跳过"
+    },
+    "logShifts": {
+      "morning": "上班",
+      "evening": "下班",
+      "manual": "手动"
+    },
+    "logMessages": {
+      "autoTrigger": "计划时间 {time}",
+      "checkInSuccess": "打卡成功",
+      "apiFailure": "接口返回失败",
+      "alreadyCheckedIn": "已检测到打卡记录"
+    },
+    "logAttempt": "第 {n} 次",
+    "logAttempts": "共 {n} 次"
   }
 }
